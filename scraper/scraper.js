@@ -1,9 +1,15 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
+const { createClient } = require("@supabase/supabase-js");
 
 const SOURCE_URL =
   "https://bdgovtjob.net/category/government-jobs-circular/";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY
+);
 
 async function scrapeJobs() {
   try {
@@ -32,18 +38,14 @@ async function scrapeJobs() {
 
       if (!title || !url) return;
 
-      const text = article
-        .text()
-        .replace(/\s+/g, " ")
-        .trim();
-
       jobs.push({
         title,
-        url,
-        source: "bdgovtjob.net",
-        rawText: text
+        source_url: url,
+        status: "active"
       });
     });
+
+    console.log(`Found ${jobs.length} jobs.`);
 
     fs.writeFileSync(
       "jobs.json",
@@ -51,19 +53,26 @@ async function scrapeJobs() {
       "utf8"
     );
 
-    console.log(`Found ${jobs.length} jobs.`);
-    console.log("Data saved to jobs.json");
-
-  } catch (error) {
-    console.error("Scraping failed.");
-
-    if (error.response) {
-      console.error(
-        `HTTP ${error.response.status}: ${error.response.statusText}`
-      );
-    } else {
-      console.error(error.message);
+    if (jobs.length === 0) {
+      throw new Error("No jobs found. Scraper may need selector changes.");
     }
+
+    const { data, error } = await supabase
+      .from("jobs")
+      .upsert(jobs, {
+        onConflict: "source_url"
+      })
+      .select();
+
+    if (error) {
+      throw new Error(`Supabase error: ${error.message}`);
+    }
+
+    console.log(`Saved/updated ${data.length} jobs in Supabase.`);
+  } catch (error) {
+    console.error("Scraping failed:");
+    console.error(error.message);
+    process.exit(1);
   }
 }
 
