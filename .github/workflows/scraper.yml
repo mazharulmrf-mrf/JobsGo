@@ -24,6 +24,9 @@ jobs:
         run: npm install
 
       - name: Run scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: node scraper.js
 
       - name: Show result
