@@ -29,5 +29,10 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: node scraper.js
 
-      - name: Show result
-        run: cat jobs.json
+      - name: Check scraper files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo ""
+          echo "Files:"
+          ls -la
