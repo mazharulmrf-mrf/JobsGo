@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
+  Bookmark,
   BriefcaseBusiness,
   CalendarDays,
+  ExternalLink,
   GraduationCap,
   MapPin,
   Search,
   Users,
   Wallet,
-  Bookmark,
-  ExternalLink,
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -37,7 +37,7 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Error loading jobs:", error);
       setJobs([]);
     } else {
       setJobs(data || []);
@@ -47,13 +47,15 @@ function App() {
   }
 
   const filteredJobs = jobs.filter((job) => {
-    const text = `
+    const searchText = search.toLowerCase();
+
+    const searchableText = `
       ${job.title || ""}
       ${job.organization || ""}
       ${job.category || ""}
     `.toLowerCase();
 
-    return text.includes(search.toLowerCase());
+    return searchableText.includes(searchText);
   });
 
   if (selectedJob) {
@@ -61,15 +63,21 @@ function App() {
       <div className="app">
         <header className="details-header">
           <button
+            type="button"
             className="icon-button"
             onClick={() => setSelectedJob(null)}
+            aria-label="Go back"
           >
             <ArrowLeft size={21} />
           </button>
 
           <strong>Job Details</strong>
 
-          <button className="icon-button">
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Save job"
+          >
             <Bookmark size={20} />
           </button>
         </header>
@@ -85,7 +93,7 @@ function App() {
                 {selectedJob.category || "JOB CIRCULAR"}
               </span>
 
-              <h2>{selectedJob.title}</h2>
+              <h2>{selectedJob.title || "Untitled Job"}</h2>
 
               {selectedJob.organization && (
                 <p>{selectedJob.organization}</p>
@@ -188,9 +196,7 @@ function App() {
 
           {selectedJob.source_url && (
             <div className="apply-box">
-              <p>
-                Ready to apply for this job?
-              </p>
+              <p>Ready to apply for this job?</p>
 
               <a
                 href={selectedJob.source_url}
@@ -245,7 +251,7 @@ function App() {
             type="text"
             placeholder="Search job circular..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
         </div>
 
@@ -282,7 +288,9 @@ function App() {
                   </div>
 
                   <div className="job-content">
-                    <h4>{job.title}</h4>
+                    <h4>
+                      {job.title || "Untitled Job"}
+                    </h4>
 
                     {job.organization && (
                       <p className="organization">
@@ -300,9 +308,10 @@ function App() {
                     </div>
 
                     <button
+                      type="button"
                       className="details-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={(event) => {
+                        event.stopPropagation();
                         setSelectedJob(job);
                       }}
                     >
@@ -319,13 +328,16 @@ function App() {
   );
 }
 
-function InfoItem({ icon, label, value, danger }) {
+function InfoItem({ icon, label, value, danger = false }) {
   return (
     <div className="info-item">
-      <div className="info-icon">{icon}</div>
+      <div className="info-icon">
+        {icon}
+      </div>
 
       <div>
         <span>{label}</span>
+
         <strong className={danger ? "danger" : ""}>
           {value}
         </strong>
@@ -338,120 +350,9 @@ function DetailsSection({ title, text }) {
   return (
     <section className="details-section">
       <h3>{title}</h3>
+
       <p>{text}</p>
     </section>
-  );
-}
-
-export default App;  const filteredJobs = jobs.filter((job) =>
-    job.title?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="app">
-      <header className="header">
-        <div className="brand">
-          <div className="brand-icon">
-            <BriefcaseBusiness size={22} />
-          </div>
-
-          <div>
-            <h1>JobsGo</h1>
-            <p>Never Miss a Job Circular!</p>
-          </div>
-        </div>
-      </header>
-
-      <main className="container">
-        <section className="hero">
-          <div>
-            <span className="eyebrow">JOB CIRCULARS</span>
-
-            <h2>
-              Find your next
-              <br />
-              opportunity.
-            </h2>
-
-            <p>
-              Latest government job circulars, all in one place.
-            </p>
-          </div>
-        </section>
-
-        <div className="search-box">
-          <Search size={20} />
-
-          <input
-            type="text"
-            placeholder="Search job circular..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <section className="section">
-          <div className="section-title">
-            <div>
-              <span className="eyebrow">LATEST</span>
-              <h3>Latest Job Circulars</h3>
-            </div>
-
-            <span className="job-count">
-              {filteredJobs.length} Jobs
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="empty-state">
-              Loading jobs...
-            </div>
-          ) : filteredJobs.length === 0 ? (
-            <div className="empty-state">
-              No jobs found.
-            </div>
-          ) : (
-            <div className="job-list">
-              {filteredJobs.map((job) => (
-                <article className="job-card" key={job.id}>
-                  <div className="job-icon">
-                    <BriefcaseBusiness size={20} />
-                  </div>
-
-                  <div className="job-content">
-                    <h4>{job.title}</h4>
-
-                    {job.organization && (
-                      <p className="organization">
-                        {job.organization}
-                      </p>
-                    )}
-
-                    <div className="job-meta">
-                      {job.deadline && (
-                        <span>
-                          <CalendarDays size={15} />
-                          Deadline: {job.deadline}
-                        </span>
-                      )}
-                    </div>
-
-                    <a
-                      href={job.source_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="details-button"
-                    >
-                      View Details
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
   );
 }
 
